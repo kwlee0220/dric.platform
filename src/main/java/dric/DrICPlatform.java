@@ -1,6 +1,6 @@
 package dric;
 
-import dric.proto.ServiceEndPoint;
+import dric.proto.EndPoint;
 
 /**
  * 
@@ -13,15 +13,7 @@ public class DrICPlatform {
 		m_conf = conf;
 	}
 	
-	public ServiceEndPoint getDataStoreEndPoint() {
-		return m_conf.getDataStoreConfig().getServiceEndPoint();
-	}
-	
-	public ServiceEndPoint getVideoServerEndPoint() {
-		return m_conf.getVideoServerConfig().getServiceEndPoint();
-	}
-	
-	public ServiceEndPoint getTopicServerEndPoint() {
-		return m_conf.getVideoServerConfig().getServiceEndPoint();
+	public EndPoint getServiceEndPoint(String name) {
+		return m_conf.getServiceEndPoint(name);
 	}
 }

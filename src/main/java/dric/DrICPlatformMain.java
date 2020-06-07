@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import dric.grpc.PBDrICPlatformServant;
-import dric.proto.ServiceEndPoint;
+import dric.proto.EndPoint;
 import io.grpc.Server;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import picocli.CommandLine;
@@ -21,7 +21,6 @@ import picocli.CommandLine.Mixin;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
-import utils.NetUtils;
 import utils.UsageHelp;
 import utils.func.FOption;
 
@@ -55,7 +54,7 @@ public class DrICPlatformMain implements Runnable {
 			DrICPlatformConfig config = DrICPlatformConfig.from(m_configFile);
 			DrICPlatform platform = new DrICPlatform(config);
 			
-			ServiceEndPoint endPoint = config.getServiceEndPoint();
+			EndPoint endPoint = platform.getServiceEndPoint("platform");
 			
 			int port = endPoint.getPort();
 			if ( port < 0 ) {
@@ -65,8 +64,7 @@ public class DrICPlatformMain implements Runnable {
 			Server server = createServer(platform, port);
 			server.start();
 
-			String host = NetUtils.getLocalHostAddress();
-			System.out.printf("started: DrICPlatform[host=%s, port=%d]%n", host, port);
+			System.out.printf("started: DrICPlatform[host=%s, port=%d]%n", endPoint.getHost(), port);
 
 			server.awaitTermination();
 		}

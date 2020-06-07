@@ -1,11 +1,11 @@
 package dric.grpc;
 
-import com.google.protobuf.Empty;
+import com.google.protobuf.StringValue;
 
 import dric.DrICPlatform;
 import dric.proto.DrICPlatformGrpc.DrICPlatformImplBase;
-import dric.proto.ServiceEndPoint;
-import dric.proto.ServiceEndPointResponse;
+import dric.proto.EndPoint;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
 /**
@@ -19,34 +19,19 @@ public class PBDrICPlatformServant extends DrICPlatformImplBase {
 		m_platform = platform;
 	}
 	
-    public void getVideoServerEndPoint(Empty req, StreamObserver<ServiceEndPointResponse> out) {
+	@Override
+    public void getServiceEndPoint(StringValue req, StreamObserver<EndPoint> out) {
 		try {
-			ServiceEndPoint sep = m_platform.getVideoServerEndPoint();
-			out.onNext(ServiceEndPointResponse.newBuilder()
-											.setEndPoint(sep)
-											.build());
+			EndPoint ep = m_platform.getServiceEndPoint(req.getValue());
+			out.onNext(ep);
+		}
+		catch ( IllegalArgumentException e ) {
+			out.onError(Status.NOT_FOUND
+							.withDescription("service name: " + req.getValue())
+							.asException());
 		}
 		catch ( Exception e ) {
-			out.onNext(ServiceEndPointResponse.newBuilder()
-											.setError(PBUtils.toErrorProto(e))
-											.build());
-		}
-		finally {
-			out.onCompleted();
-		}
-    }
-	
-    public void getDataStoreEndPoint(Empty req, StreamObserver<ServiceEndPointResponse> out) {
-		try {
-			ServiceEndPoint sep = m_platform.getDataStoreEndPoint();
-			out.onNext(ServiceEndPointResponse.newBuilder()
-											.setEndPoint(sep)
-											.build());
-		}
-		catch ( Exception e ) {
-			out.onNext(ServiceEndPointResponse.newBuilder()
-											.setError(PBUtils.toErrorProto(e))
-											.build());
+			out.onError(Status.INTERNAL.withCause(e).asException());
 		}
 		finally {
 			out.onCompleted();

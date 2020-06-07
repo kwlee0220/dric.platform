@@ -1,14 +1,13 @@
-service_end_point:
-    port: 10703
-    
-data_store:
-    host: localhost
-    port: 10220
-    
-topic_server:
-    host:
-    port: 1883
-    
-video_server:
-    host: localhost
-    port: 10628
+service_end_points:
+   platform:
+       host: localhost
+       port: 10703
+   data_store:
+       host: localhost
+       port: 10220
+   topic_server:
+       host: localhost
+       port: 1883
+   video_server:
+       host: localhost
+       port: 10628

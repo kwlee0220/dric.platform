@@ -11,3 +11,11 @@ service_end_points:
    video_server:
        host: localhost
        port: 10628
+
+jdbc:
+    system: postgresql
+    host: 129.254.82.42
+    port: 5432
+    db_name: kwlee
+    user: kwlee
+    password: urc2004

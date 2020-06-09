@@ -12,6 +12,7 @@ import org.yaml.snakeyaml.Yaml;
 import com.google.common.collect.Maps;
 
 import dric.proto.EndPoint;
+import dric.proto.JdbcEndPoint;
 
 /**
  * 
@@ -19,9 +20,11 @@ import dric.proto.EndPoint;
  */
 public class DrICPlatformConfig {
 	private final Map<String,EndPoint> m_endPoints = Maps.newHashMap();
+	private final JdbcEndPoint m_jdbc;
 	
-	private DrICPlatformConfig(Map<String,EndPoint> endPoints) {
+	private DrICPlatformConfig(Map<String,EndPoint> endPoints, JdbcEndPoint jdbc) {
 		m_endPoints.putAll(endPoints);
+		m_jdbc = jdbc;
 	}
 	
 	public static DrICPlatformConfig from(File configFile) throws FileNotFoundException, IOException {
@@ -41,8 +44,14 @@ public class DrICPlatformConfig {
 		for ( String key: Arrays.asList("platform", "data_store", "topic_server", "video_server") ) {
 			endPoints.put(key, ConfigUtils.parseEndPoint(seps, key));
 		}
+
+		JdbcEndPoint jdbc = ConfigUtils.parseJdbcEndPoint(config, "jdbc");
 		
-		return new DrICPlatformConfig(endPoints);
+		return new DrICPlatformConfig(endPoints, jdbc);
+	}
+	
+	public JdbcEndPoint getJdbcEndPoint() {
+		return m_jdbc;
 	}
 	
 	public EndPoint getServiceEndPoint(String serviceName) {

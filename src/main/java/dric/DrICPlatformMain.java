@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.Connection;
 import java.util.Properties;
 
 import org.apache.log4j.PropertyConfigurator;
@@ -12,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import dric.grpc.PBDrICPlatformServant;
 import dric.proto.EndPoint;
+import dric.store.PipeLineMonitor;
 import io.grpc.Server;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import picocli.CommandLine;
@@ -22,7 +24,9 @@ import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 import utils.UsageHelp;
+import utils.Utilities;
 import utils.func.FOption;
+import utils.jdbc.JdbcProcessor;
 
 /**
  * 
@@ -31,19 +35,27 @@ import utils.func.FOption;
 public class DrICPlatformMain implements Runnable {
 	private static final Logger s_logger = LoggerFactory.getLogger(DrICPlatformMain.class);
 	private static final int DEFAULT_DRIC_PORT = 10703;
+	private static final String DEFAULT_CONFIG_FNAME = "dric.platform.yaml";
 	
 	@Spec private CommandSpec m_spec;
 	@Mixin private UsageHelp m_help;
 	
 	@Option(names={"--config"}, paramLabel="path", description={"platform configuration file"})
-	private File m_configFile = new File("dric_platform.yaml");
+	private File m_configFile;
+	
+	private File m_homeDir;
+	@Option(names={"--home"}, paramLabel="path", description={"DrICPlatform Home Directory"})
+	public void setHome(String path) throws IOException {
+		m_homeDir = new File(path).getCanonicalFile();
+	}
+	
+	@Option(names={"-f", "--format"}, description={"format DrICPlatform database"})
+	private boolean m_format = false;
 	
 	@Option(names={"-v"}, description={"verbose"})
 	private boolean m_verbose = false;
 	
 	public static final void main(String... args) throws Exception {
-		configureLog4j();
-
 		DrICPlatformMain cmd = new DrICPlatformMain();
 		CommandLine.run(cmd, System.out, System.err, Help.Ansi.OFF, args);
 	}
@@ -51,11 +63,28 @@ public class DrICPlatformMain implements Runnable {
 	@Override
 	public void run() {
 		try  {
-			DrICPlatformConfig config = DrICPlatformConfig.from(m_configFile);
+			configureLog4j();
+			
+			File configFile = FOption.ofNullable(m_configFile)
+									.getOrElse(() -> new File(getHomeDir(), DEFAULT_CONFIG_FNAME));
+			if ( m_verbose ) {
+				System.out.println("use config.file=" + configFile);
+			}
+			DrICPlatformConfig config = DrICPlatformConfig.from(configFile);
 			DrICPlatform platform = new DrICPlatform(config);
 			
-			EndPoint endPoint = platform.getServiceEndPoint("platform");
+			if ( m_format ) {
+				JdbcProcessor jdbc = ConfigUtils.getJdbcProcessor(config.getJdbcEndPoint());
+				try ( Connection conn = jdbc.connect() ) {
+					if ( m_verbose ) {
+						System.out.println("format database");
+					}
+					
+					PipeLineMonitor.format(conn);
+				}
+			}
 			
+			EndPoint endPoint = platform.getServiceEndPoint("platform");
 			int port = endPoint.getPort();
 			if ( port < 0 ) {
 				port = DEFAULT_DRIC_PORT;
@@ -76,14 +105,11 @@ public class DrICPlatformMain implements Runnable {
 		}
 	}
 	
-	public static File getLog4jPropertiesFile() {
-		String homeDir = FOption.ofNullable(System.getenv("DRIC_HOME"))
-								.getOrElse(() -> System.getProperty("user.dir"));
-		return new File(homeDir, "log4j.properties");
-	}
-	
-	public static File configureLog4j() throws IOException {
-		File propsFile = getLog4jPropertiesFile();
+	private File configureLog4j() throws IOException {
+		File propsFile = new File(getHomeDir(), "log4j.properties");
+		if ( m_verbose ) {
+			System.out.println("use log4.properties=" + propsFile);
+		}
 		
 		Properties props = new Properties();
 		try ( InputStream is = new FileInputStream(propsFile) ) {
@@ -104,5 +130,16 @@ public class DrICPlatformMain implements Runnable {
 												.addService(platform)
 												.build();
 		return nettyServer;
+	}
+	
+	private File getHomeDir() {
+		File homeDir = m_homeDir;
+		if ( homeDir == null ) {
+			homeDir = FOption.ofNullable(System.getenv("DRIC_HOME"))
+								.map(File::new)
+								.getOrElse(Utilities::getCurrentWorkingDir);
+		}
+		
+		return homeDir;
 	}
 }

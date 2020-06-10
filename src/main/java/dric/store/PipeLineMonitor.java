@@ -3,14 +3,16 @@ package dric.store;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.util.concurrent.AbstractExecutionThreadService;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import dric.ConfigUtils;
@@ -25,13 +27,18 @@ import utils.jdbc.JdbcProcessor;
  * 
  * @author Kang-Woo Lee (ETRI)
  */
-public class PipeLineMonitor extends AbstractExecutionThreadService implements MqttCallback {
+public class PipeLineMonitor implements MqttCallback {
+	private static final Logger s_logger = LoggerFactory.getLogger(PipeLineMonitor.class);
+	
 	private final DrICPlatform m_platform;
 	private final JdbcProcessor m_jdbc;
+	private final String[] m_topicNames;
+	private volatile MqttClient m_client;
 	
 	public PipeLineMonitor(DrICPlatform platform) {
 		m_platform = platform;
 		m_jdbc = ConfigUtils.getJdbcProcessor(platform.getConfig().getJdbcEndPoint());
+		m_topicNames = new String[] { DrICPlatform.TOPIC_BBOX_TRACKS };
 	}
 	
 	public static void format(Connection conn) throws SQLException {
@@ -40,13 +47,38 @@ public class PipeLineMonitor extends AbstractExecutionThreadService implements M
 		stmt.executeUpdate(SQL_CREATE_BBOX_TRACKS);
 	}
 
-	@Override
-	protected void run() throws Exception {
-		MqttClient client = m_platform.getMqttClient("dric_store");
-		client.setCallback(this);
-		client.connect();
-		
-		client.subscribe(new String[] {"dric/bbox_tracks"});
+	public void subscribe() {
+		try {
+			m_client = m_platform.getMqttClient("dric_store");
+			m_client.setCallback(this);
+			m_client.connect();
+			
+			if ( s_logger.isInfoEnabled() ) {
+				s_logger.info("starting to subscribe topics: " + Arrays.toString(m_topicNames));
+			}
+			m_client.subscribe(m_topicNames);
+		}
+		catch ( Exception e ) {
+			throw new TopicException("" + e);
+		}
+	}
+	
+	public void unsubscribe() {
+		if ( m_client != null ) {
+			MqttClient client = m_client;
+			m_client = null;
+
+			if ( s_logger.isInfoEnabled() ) {
+				s_logger.info("closing PipeLineMonitor: topics=" + Arrays.toString(m_topicNames));
+			}
+			try {
+				client.unsubscribe(m_topicNames);
+				client.disconnect();
+			}
+			catch ( Exception e ) {
+				throw new TopicException("" + e);
+			}
+		}
 	}
 
 	@Override
@@ -57,9 +89,7 @@ public class PipeLineMonitor extends AbstractExecutionThreadService implements M
 	}
 
 	@Override public void connectionLost(Throwable cause) { }
-
-	@Override
-	public void deliveryComplete(IMqttDeliveryToken token) { }
+	@Override public void deliveryComplete(IMqttDeliveryToken token) { }
 	
 	private void appendBBoxTrack(MqttMessage mqttMsg) throws InvalidProtocolBufferException, SQLException {
 		ObjectBBoxTrackProto proto = ObjectBBoxTrackProto.parseFrom(mqttMsg.getPayload());

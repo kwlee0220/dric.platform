@@ -52,8 +52,13 @@ public class DrICPlatformMain implements Runnable {
 	@Option(names={"-f", "--format"}, description={"format DrICPlatform database"})
 	private boolean m_format = false;
 	
+	@Option(names={"-u", "--update"}, description={"update pipeline's result"})
+	private boolean m_update = false;
+	
 	@Option(names={"-v"}, description={"verbose"})
 	private boolean m_verbose = false;
+	
+	private volatile PipeLineMonitor m_topicMonitor;
 	
 	public static final void main(String... args) throws Exception {
 		DrICPlatformMain cmd = new DrICPlatformMain();
@@ -72,7 +77,7 @@ public class DrICPlatformMain implements Runnable {
 			}
 			DrICPlatformConfig config = DrICPlatformConfig.from(configFile);
 			DrICPlatform platform = new DrICPlatform(config);
-			
+
 			if ( m_format ) {
 				JdbcProcessor jdbc = ConfigUtils.getJdbcProcessor(config.getJdbcEndPoint());
 				try ( Connection conn = jdbc.connect() ) {
@@ -83,6 +88,19 @@ public class DrICPlatformMain implements Runnable {
 					PipeLineMonitor.format(conn);
 				}
 			}
+			if ( m_update ) {
+				m_topicMonitor = new PipeLineMonitor(platform);
+				m_topicMonitor.subscribe();
+			}
+			
+	    	Runtime.getRuntime().addShutdownHook(new Thread() {
+	    		public void run() {
+	    			if ( m_topicMonitor != null ) {
+	    				m_topicMonitor.unsubscribe();
+	    				m_topicMonitor = null;
+	    			}
+	    		}
+	    	});
 			
 			EndPoint endPoint = platform.getServiceEndPoint("platform");
 			int port = endPoint.getPort();
@@ -102,6 +120,10 @@ public class DrICPlatformMain implements Runnable {
 			m_spec.commandLine().usage(System.out, Ansi.OFF);
 		}
 		finally {
+			if ( m_topicMonitor != null ) {
+				m_topicMonitor.unsubscribe();
+				m_topicMonitor = null;
+			}
 		}
 	}
 	

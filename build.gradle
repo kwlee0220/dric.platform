@@ -66,7 +66,9 @@ ext.snakeyaml_version = '1.26'
 ext.grpc_version = '1.16.1'
 ext.protobuf_version = '3.5.1'
 //ext.avro_version = '1.9.2'
-//ext.paho_version = '1.2.4'
+ext.paho_version = '1.2.4'
+ext.postgresql_version = '42.0.0'
+ext.postgis_jdbc_version = '2.1.0'
 
 dependencies {
 	compile project(":utils")
@@ -80,7 +82,7 @@ dependencies {
 //	implementation "org.apache.avro:avro-compiler:${avro_version}"
 	
 	// Paho MQTT
-//	implementation "org.eclipse.paho:org.eclipse.paho.client.mqttv3:${paho_version}"
+	implementation "org.eclipse.paho:org.eclipse.paho.client.mqttv3:${paho_version}"
 	
 	// grpc
 	compile "com.google.protobuf:protobuf-java:${protobuf_version}"
@@ -91,6 +93,10 @@ dependencies {
 	
 	// yaml
 	implementation group: 'org.yaml', name: 'snakeyaml', version: "${snakeyaml_version}"
+	
+	// PostSQL
+	compile "org.postgresql:postgresql:${postgresql_version}"
+	compile "org.postgis:postgis-jdbc:${postgis_jdbc_version}"
 }
 
 task sourceJar(type: Jar) {

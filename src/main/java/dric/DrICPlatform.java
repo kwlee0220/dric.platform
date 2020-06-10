@@ -12,6 +12,8 @@ import dric.store.TopicException;
  * @author Kang-Woo Lee (ETRI)
  */
 public class DrICPlatform {
+	public static final String TOPIC_BBOX_TRACKS = "dric/bbox_tracks";
+	
 	private final DrICPlatformConfig m_conf;
 	
 	public DrICPlatform(DrICPlatformConfig conf) {

@@ -1,15 +1,15 @@
 service_end_points:
    platform:
-       host: localhost
+       host: 129.254.82.26
        port: 10703
    data_store:
-       host: localhost
+       host: 129.254.82.26
        port: 10220
    topic_server:
-       host: localhost
+       host: 129.254.82.26
        port: 1883
    video_server:
-       host: localhost
+       host: 129.254.82.26
        port: 10628
 
 jdbc:

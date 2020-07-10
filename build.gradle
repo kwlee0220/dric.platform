@@ -68,7 +68,8 @@ ext.protobuf_version = '3.5.1'
 //ext.avro_version = '1.9.2'
 ext.paho_version = '1.2.4'
 ext.postgresql_version = '42.0.0'
-ext.postgis_jdbc_version = '2.1.0'
+//ext.postgis_jdbc_version = '2.1.0'
+ext.postgis_jdbc_version = '2.2.1'
 
 dependencies {
 	compile project(":utils")
@@ -97,7 +98,7 @@ dependencies {
 	
 	// PostSQL
 	compile "org.postgresql:postgresql:${postgresql_version}"
-	compile "org.postgis:postgis-jdbc:${postgis_jdbc_version}"
+	implementation "net.postgis:postgis-jdbc:${postgis_jdbc_version}"
 }
 
 task sourceJar(type: Jar) {

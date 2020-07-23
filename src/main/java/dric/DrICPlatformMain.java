@@ -25,7 +25,6 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 import utils.UsageHelp;
 import utils.Utilities;
-import utils.func.FOption;
 import utils.jdbc.JdbcProcessor;
 
 /**
@@ -34,6 +33,7 @@ import utils.jdbc.JdbcProcessor;
  */
 public class DrICPlatformMain implements Runnable {
 	private static final Logger s_logger = LoggerFactory.getLogger(DrICPlatformMain.class);
+	private static final String ENV_VAR_HOME = "DRIC_HOME";
 	private static final int DEFAULT_DRIC_PORT = 10703;
 	private static final String DEFAULT_CONFIG_FNAME = "dric.platform.yaml";
 	
@@ -42,12 +42,9 @@ public class DrICPlatformMain implements Runnable {
 	
 	@Option(names={"--config"}, paramLabel="path", description={"platform configuration file"})
 	private File m_configFile;
-	
-	private File m_homeDir;
+
 	@Option(names={"--home"}, paramLabel="path", description={"DrICPlatform Home Directory"})
-	public void setHome(String path) throws IOException {
-		m_homeDir = new File(path).getCanonicalFile();
-	}
+	private File m_homeDir;
 	
 	@Option(names={"-f", "--format"}, description={"format DrICPlatform database"})
 	private boolean m_format = false;
@@ -70,8 +67,7 @@ public class DrICPlatformMain implements Runnable {
 		try  {
 			configureLog4j();
 			
-			File configFile = FOption.ofNullable(m_configFile)
-									.getOrElse(() -> new File(getHomeDir(), DEFAULT_CONFIG_FNAME));
+			File configFile = getConfigFile();
 			if ( m_verbose ) {
 				System.out.println("use config.file=" + configFile);
 			}
@@ -127,6 +123,40 @@ public class DrICPlatformMain implements Runnable {
 		}
 	}
 	
+	private Server createServer(DrICPlatform dric, int port) {
+		PBDrICPlatformServant platform = new PBDrICPlatformServant(dric);
+		
+		Server nettyServer = NettyServerBuilder.forPort(port)
+												.addService(platform)
+												.build();
+		return nettyServer;
+	}
+	
+	private File getHomeDir() {
+		File homeDir = m_homeDir;
+		if ( homeDir == null ) {
+			String homeDirPath = System.getenv(ENV_VAR_HOME);
+			if ( homeDirPath == null ) {
+				return Utilities.getCurrentWorkingDir();
+			}
+			else {
+				return new File(homeDirPath);
+			}
+		}
+		else {
+			return m_homeDir;
+		}
+	}
+	
+	private File getConfigFile() {
+		if ( m_configFile == null ) {
+			return new File(getHomeDir(), DEFAULT_CONFIG_FNAME);
+		}
+		else {
+			return m_configFile;
+		}
+	}
+	
 	private File configureLog4j() throws IOException {
 		File propsFile = new File(getHomeDir(), "log4j.properties");
 		if ( m_verbose ) {
@@ -143,25 +173,5 @@ public class DrICPlatformMain implements Runnable {
 		}
 		
 		return propsFile;
-	}
-	
-	private Server createServer(DrICPlatform dric, int port) {
-		PBDrICPlatformServant platform = new PBDrICPlatformServant(dric);
-		
-		Server nettyServer = NettyServerBuilder.forPort(port)
-												.addService(platform)
-												.build();
-		return nettyServer;
-	}
-	
-	private File getHomeDir() {
-		File homeDir = m_homeDir;
-		if ( homeDir == null ) {
-			homeDir = FOption.ofNullable(System.getenv("DRIC_HOME"))
-								.map(File::new)
-								.getOrElse(Utilities::getCurrentWorkingDir);
-		}
-		
-		return homeDir;
 	}
 }

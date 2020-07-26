@@ -5,9 +5,9 @@ import dric.proto.DrICPlatformGrpc.DrICPlatformImplBase;
 import dric.proto.EndPoint;
 import dric.proto.EndPointResponse;
 import io.grpc.stub.StreamObserver;
-import proto.ErrorProto;
-import proto.ErrorProto.Code;
-import proto.StringProto;
+import marmot.proto.ErrorProto;
+import marmot.proto.ErrorProto.Code;
+import marmot.proto.StringProto;
 import utils.grpc.PBUtils;
 
 /**

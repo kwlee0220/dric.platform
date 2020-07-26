@@ -1,6 +1,5 @@
 apply plugin: 'java'
 apply plugin: 'maven-publish'
-apply plugin: 'com.google.protobuf'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 buildscript {
@@ -25,25 +24,8 @@ buildscript {
 		jcenter()
 	}
 	dependencies {
-		classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.7'
 		classpath 'com.github.jengelman.gradle.plugins:shadow:4.0.4'
 		classpath 'com.netflix.nebula:gradle-aggregate-javadocs-plugin:2.2.+'
-	}
-}
-
-protobuf {
-	protoc {
-		artifact = "com.google.protobuf:protoc:3.5.1-1"
-	}
-	plugins {
-		grpc {
-			artifact = 'io.grpc:protoc-gen-grpc-java:1.16.1'
-		}
-	}
-	generateProtoTasks {
-		all()*.plugins {
-			grpc {}
-		}
 	}
 }
 
@@ -73,7 +55,6 @@ ext.postgis_jdbc_version = '2.2.1'
 
 dependencies {
 	compile project(":utils")
-	compile project(":utils.grpc")
 	compile project(":dric.client")
 	
 	// OpenCV
@@ -86,12 +67,12 @@ dependencies {
 	// Paho MQTT
 	implementation "org.eclipse.paho:org.eclipse.paho.client.mqttv3:${paho_version}"
 	
-	// grpc
-	compile "com.google.protobuf:protobuf-java:${protobuf_version}"
-	compile "com.google.protobuf:protobuf-java-util:${protobuf_version}"
-	compile "io.grpc:grpc-stub:${grpc_version}"
-	compile "io.grpc:grpc-netty-shaded:${grpc_version}"
-	compile "io.grpc:grpc-protobuf:${grpc_version}"
+//	// grpc
+//	compile "com.google.protobuf:protobuf-java:${protobuf_version}"
+//	compile "com.google.protobuf:protobuf-java-util:${protobuf_version}"
+//	compile "io.grpc:grpc-stub:${grpc_version}"
+//	compile "io.grpc:grpc-netty-shaded:${grpc_version}"
+//	compile "io.grpc:grpc-protobuf:${grpc_version}"
 	
 	// yaml
 	implementation group: 'org.yaml', name: 'snakeyaml', version: "${snakeyaml_version}"

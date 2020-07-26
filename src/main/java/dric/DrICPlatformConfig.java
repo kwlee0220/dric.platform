@@ -36,7 +36,6 @@ public class DrICPlatformConfig {
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
 	public static DrICPlatformConfig from(Map<String,Object> config) {
 		Map<String,EndPoint> endPoints = Maps.newHashMap();
 

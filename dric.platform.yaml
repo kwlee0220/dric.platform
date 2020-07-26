@@ -11,6 +11,9 @@ service_end_points:
    video_server:
        host: 129.254.82.26
        port: 10628
+   marmot_server:
+       host: 129.254.82.42
+       port: 15685
 
 jdbc:
     system: postgresql

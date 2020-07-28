@@ -12,7 +12,6 @@ ext.marmot_dir = "../../marmot"
 	project(":$it").projectDir = file("${marmot_dir}/$it")
 }
 
-
 ext.dric_dir = '..'
 ['dric.client'].each {
 	include ":$it"

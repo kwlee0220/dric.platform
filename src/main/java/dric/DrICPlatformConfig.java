@@ -13,6 +13,7 @@ import com.google.common.collect.Maps;
 
 import dric.proto.EndPoint;
 import dric.proto.JdbcEndPoint;
+import utils.stream.FStream;
 
 /**
  * 
@@ -40,10 +41,8 @@ public class DrICPlatformConfig {
 		Map<String,EndPoint> endPoints = Maps.newHashMap();
 
 		Map<String,Object> seps = ConfigUtils.getSubConfig(config, "service_end_points");
-		for ( String key: Arrays.asList("platform", "data_store", "topic_server", "video_server") ) {
-			endPoints.put(key, ConfigUtils.parseEndPoint(seps, key));
-		}
-
+		FStream.from(seps)
+				.forEach(kv -> endPoints.put(kv.key(), ConfigUtils.parseEndPoint(seps, kv.key())));
 		JdbcEndPoint jdbc = ConfigUtils.parseJdbcEndPoint(config, "jdbc");
 		
 		return new DrICPlatformConfig(endPoints, jdbc);

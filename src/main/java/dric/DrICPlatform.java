@@ -6,6 +6,13 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 
 import dric.proto.EndPoint;
 import dric.store.TopicException;
+import dric.type.CameraFrame;
+import marmot.dataset.DataSet;
+import marmot.dataset.DataSetExistsException;
+import marmot.dataset.DataSetInfo;
+import marmot.dataset.DataSetServer;
+import marmot.dataset.DataSetType;
+import marmot.remote.client.GrpcMarmotRuntimeProxy;
 
 /**
  * 
@@ -18,6 +25,19 @@ public class DrICPlatform {
 	
 	public DrICPlatform(DrICPlatformConfig conf) {
 		m_conf = conf;
+		
+		EndPoint topicServerEp = getServiceEndPoint("topic_server");
+		EndPoint ep = getServiceEndPoint("marmot_server");
+		try ( GrpcMarmotRuntimeProxy marmot = GrpcMarmotRuntimeProxy.connect(ep.getHost(), ep.getPort()) ) {
+			DataSetServer dsServer = marmot.getDataSetServer();
+			DataSetInfo cameraFrames = new DataSetInfo("topics/" + CameraFrame.getTopicName(),
+														DataSetType.MQTT, CameraFrame.RECORD_SCHEMA);
+			DataSet ds = dsServer.createDataSet(cameraFrames, false);
+			DataSetInfo info = ds.getDataSetInfo();
+			info.setParameter(topicServerEp.getHost() + ":" + topicServerEp.getPort() + ":" + CameraFrame.getTopicName());
+			dsServer.updateDataSet(info);
+		}
+		catch ( DataSetExistsException expected ) { }
 	}
 	
 	public DrICPlatformConfig getConfig() {

@@ -1,18 +1,18 @@
 service_end_points:
    platform:
-       host: 129.254.82.26
+       host: localhost
        port: 10703
    data_store:
-       host: 129.254.82.26
+       host: localhost
        port: 10220
    topic_server:
-       host: 129.254.82.26
+       host: localhost
        port: 1883
    video_server:
-       host: 129.254.82.26
+       host: localhost
        port: 10628
    marmot_server:
-       host: 129.254.82.42
+       host: localhost
        port: 15685
 
 jdbc:

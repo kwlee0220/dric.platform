@@ -1,4 +1,4 @@
-package dric;
+package dric.command;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -11,6 +11,9 @@ import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import dric.ConfigUtils;
+import dric.DrICPlatform;
+import dric.DrICPlatformConfig;
 import dric.grpc.PBDrICPlatformServant;
 import dric.proto.EndPoint;
 import dric.store.PipeLineMonitor;

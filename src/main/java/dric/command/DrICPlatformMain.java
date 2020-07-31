@@ -39,6 +39,8 @@ public class DrICPlatformMain implements Runnable {
 	private static final String ENV_VAR_HOME = "DRIC_HOME";
 	private static final int DEFAULT_DRIC_PORT = 10703;
 	private static final String DEFAULT_CONFIG_FNAME = "dric.platform.yaml";
+	private static final String CATALOG_JDBC = "h2_local::0:sa::~/catalog";
+	private static final File DATASET_STORE_ROOT = new File(Utilities.getHomeDir(), "datasets"); 
 	
 	@Spec private CommandSpec m_spec;
 	@Mixin private UsageHelp m_help;
@@ -106,8 +108,17 @@ public class DrICPlatformMain implements Runnable {
 			if ( port < 0 ) {
 				port = DEFAULT_DRIC_PORT;
 			}
-			
-			Server server = createServer(platform, port);
+
+//			MarmotLfsServer marmot = new MarmotLfsServer(CATALOG_JDBC, DATASET_STORE_ROOT);
+//			GrpcDataSetServiceServant servant = new GrpcDataSetServiceServant(marmot.getDataSetServer());
+//			GrpcFileServiceServant fileServant = new GrpcFileServiceServant(marmot.getFileServer());
+
+			PBDrICPlatformServant platformServant = new PBDrICPlatformServant(platform);
+			Server server = NettyServerBuilder.forPort(port)
+//												.addService(servant)
+//												.addService(fileServant)
+												.addService(platformServant)
+												.build();
 			server.start();
 
 			System.out.printf("started: DrICPlatform[host=%s, port=%d]%n", endPoint.getHost(), port);
@@ -126,14 +137,14 @@ public class DrICPlatformMain implements Runnable {
 		}
 	}
 	
-	private Server createServer(DrICPlatform dric, int port) {
-		PBDrICPlatformServant platform = new PBDrICPlatformServant(dric);
-		
-		Server nettyServer = NettyServerBuilder.forPort(port)
-												.addService(platform)
-												.build();
-		return nettyServer;
-	}
+//	private Server createServer(DrICPlatform dric, int port) {
+//		PBDrICPlatformServant platform = new PBDrICPlatformServant(dric);
+//		
+//		Server nettyServer = NettyServerBuilder.forPort(port)
+//												.addService(platform)
+//												.build();
+//		return nettyServer;
+//	}
 	
 	private File getHomeDir() {
 		File homeDir = m_homeDir;

@@ -7,6 +7,7 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import dric.proto.EndPoint;
 import dric.store.TopicException;
 import dric.type.CameraFrame;
+import io.grpc.StatusRuntimeException;
 import marmot.dataset.DataSet;
 import marmot.dataset.DataSetExistsException;
 import marmot.dataset.DataSetInfo;
@@ -38,6 +39,9 @@ public class DrICPlatform {
 			dsServer.updateDataSet(info);
 		}
 		catch ( DataSetExistsException expected ) { }
+		catch ( StatusRuntimeException e ) {
+			throw new IllegalStateException("fails to connect to marmot-server: end-point=" + ep);
+		}
 	}
 	
 	public DrICPlatformConfig getConfig() {

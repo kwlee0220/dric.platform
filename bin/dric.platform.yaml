@@ -1,1 +1,24 @@
-../dric.platform.yaml
+service_end_points:
+   platform:
+       host: localhost
+       port: 10703
+   data_store:
+       host: localhost
+       port: 10220
+   topic_server:
+       host: localhost
+       port: 1883
+   video_server:
+       host: localhost
+       port: 10628
+   marmot_server:
+       host: localhost
+       port: 15685
+
+jdbc:
+    system: postgresql
+    host: 129.254.82.42
+    port: 5432
+    db_name: kwlee
+    user: kwlee
+    password: urc2004
